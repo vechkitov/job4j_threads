@@ -14,10 +14,9 @@ public class ThreadState {
         printThreadInfo(second);
         first.start();
         second.start();
-        while (first.getState() != Thread.State.TERMINATED) {
+        while (first.getState() != Thread.State.TERMINATED
+                || second.getState() != Thread.State.TERMINATED) {
             printThreadInfo(first);
-        }
-        while (second.getState() != Thread.State.TERMINATED) {
             printThreadInfo(second);
         }
         printThreadInfo(first);
