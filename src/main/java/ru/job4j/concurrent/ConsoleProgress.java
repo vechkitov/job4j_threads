@@ -18,7 +18,7 @@ public class ConsoleProgress implements Runnable {
                 System.out.print("\rLoading ... " + process[index % process.length]);
                 Thread.sleep(500);
                 index++;
-            } catch (InterruptedException e) { /* сбрасывает флаг interrupted */
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
