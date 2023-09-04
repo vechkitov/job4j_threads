@@ -25,16 +25,21 @@ public class Wget implements Runnable {
         try (var in = new URL(url).openStream();
              var out = new FileOutputStream(file)) {
             var dataBuffer = new byte[BUFFER_SIZE];
+            int bytesTotal = 0;
             int bytesRead;
+            long downloadAt = 0L;
             while ((bytesRead = in.read(dataBuffer, 0, dataBuffer.length)) != -1) {
-                var downloadAt = System.nanoTime();
+                if (bytesTotal == 0) {
+                    downloadAt = System.nanoTime();
+                }
+                bytesTotal += bytesRead;
                 out.write(dataBuffer, 0, bytesRead);
-                long actualSpeed = bytesRead * 1_000_000L / (System.nanoTime() - downloadAt); /* байт в мс */
-                long delay = actualSpeed / speed;
-                Thread.sleep(delay);
-                System.out.printf("Read %s bytes. Actual speed: %s bytes/ms. Required speed: %s. Delay: %s\n",
-                        bytesRead, actualSpeed, speed, delay);
+                if (bytesTotal >= speed) {
+                    doDelay(bytesTotal, downloadAt);
+                    bytesTotal = 0;
+                }
             }
+            doDelay(bytesTotal, downloadAt);
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -66,5 +71,13 @@ public class Wget implements Runnable {
             throw new IllegalArgumentException("Скорость должна быть целым положительным числом. "
                     + "Было передано значение: " + speed);
         }
+    }
+
+    private void doDelay(int bytesTotal, long downloadAt) throws InterruptedException {
+        long actualSpeed = bytesTotal * 1_000_000L / (System.nanoTime() - downloadAt); /* байт в мс */
+        long delay = actualSpeed / speed;
+        Thread.sleep(delay);
+        System.out.printf("Read %s bytes. Actual speed: %s bytes/ms. Required speed: %s. Delay: %s\n",
+                bytesTotal, actualSpeed, speed, delay);
     }
 }
