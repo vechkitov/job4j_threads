@@ -27,16 +27,14 @@ public class Wget implements Runnable {
             var dataBuffer = new byte[BUFFER_SIZE];
             int bytesTotal = 0;
             int bytesRead;
-            long downloadAt = 0L;
+            long downloadAt = System.nanoTime();
             while ((bytesRead = in.read(dataBuffer, 0, dataBuffer.length)) != -1) {
-                if (bytesTotal == 0) {
-                    downloadAt = System.nanoTime();
-                }
                 bytesTotal += bytesRead;
                 out.write(dataBuffer, 0, bytesRead);
                 if (bytesTotal >= speed) {
                     doDelay(bytesTotal, downloadAt);
                     bytesTotal = 0;
+                    downloadAt = System.nanoTime();
                 }
             }
             doDelay(bytesTotal, downloadAt);
