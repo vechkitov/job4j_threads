@@ -22,4 +22,12 @@ public class ParseFile {
             return output.toString();
         }
     }
+
+    public String getContentWithoutUnicode() throws IOException {
+        return getContent(data -> data < 0x80);
+    }
+
+    public String getAllContent() throws IOException {
+        return getContent(data -> true);
+    }
 }
