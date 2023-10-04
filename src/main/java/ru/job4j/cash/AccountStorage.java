@@ -19,11 +19,7 @@ public class AccountStorage {
 
     public boolean update(Account account) {
         synchronized (accounts) {
-            boolean hasValue = accounts.containsKey(account.id());
-            if (hasValue) {
-                accounts.replace(account.id(), account);
-            }
-            return hasValue;
+            return accounts.replace(account.id(), account) != null;
         }
     }
 
@@ -41,34 +37,17 @@ public class AccountStorage {
 
     public boolean transfer(int fromId, int toId, int amount) {
         synchronized (accounts) {
-            if (!isPossibleToTransfer(fromId, toId, amount)) {
-                return false;
+            Account accountFrom = getById(fromId).orElseThrow(
+                    () -> new IllegalArgumentException("Счет с id=" + fromId + " не найден"));
+            Account accoutnTo = getById(toId).orElseThrow(
+                    () -> new IllegalArgumentException("Счет с id=" + toId + " не найден"));
+            if (accountFrom.amount() < amount) {
+                throw new IllegalArgumentException(String.format("На счете с id=%s недостаточно средств для списания. "
+                        + "В наличии: %s. Требуется: %s%n", accountFrom.id(), accountFrom.amount(), amount));
             }
-            accounts.replace(fromId, new Account(fromId, getById(fromId).get().amount() - amount));
-            accounts.replace(toId, new Account(toId, getById(toId).get().amount() + amount));
+            accounts.replace(fromId, new Account(accountFrom.id(), accountFrom.amount() - amount));
+            accounts.replace(toId, new Account(accoutnTo.id(), accoutnTo.amount() + amount));
             return true;
         }
-    }
-
-    private boolean isPossibleToTransfer(int fromId, int toId, int amount) {
-        boolean isPossible = true;
-        Optional<Account> accountFromOpt = getById(fromId);
-        if (accountFromOpt.isEmpty()) {
-            System.out.printf("Счета с id=%s не существует%n", fromId);
-            isPossible = false;
-        }
-        if (isPossible) {
-            int amountFrom = accountFromOpt.get().amount();
-            if (amountFrom < amount) {
-                System.out.printf("На счете с id=%s недостаточно средств для списания. "
-                        + "В наличии: %s. Требуется: %s%n", fromId, amountFrom, amount);
-                isPossible = false;
-            }
-        }
-        if (getById(toId).isEmpty()) {
-            System.out.printf("Счета с id=%s не существует%n", toId);
-            isPossible = false;
-        }
-        return isPossible;
     }
 }

@@ -3,7 +3,7 @@ package ru.job4j.cash;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AccountStorageTest {
 
@@ -20,10 +20,13 @@ class AccountStorageTest {
     void whenUpdate() {
         var storage = new AccountStorage();
         storage.add(new Account(1, 100));
-        storage.update(new Account(1, 200));
+        boolean result = storage.update(new Account(1, 200));
         var firstAccount = storage.getById(1)
                 .orElseThrow(() -> new IllegalStateException("Not found account by id = 1"));
-        assertThat(firstAccount.amount()).isEqualTo(200);
+        assertAll(
+                () -> assertThat(firstAccount.amount()).isEqualTo(200),
+                () -> assertTrue(result)
+        );
     }
 
     @Test
@@ -52,22 +55,16 @@ class AccountStorageTest {
     void whenAccountFromIsNotExistsThenDoNotTransfer() {
         var storage = new AccountStorage();
         storage.add(new Account(2, 100));
-        boolean isSuccess = storage.transfer(1, 2, 100);
-        assertAll(
-                () -> assertThat(isSuccess).isFalse(),
-                () -> assertThat(storage.getById(2).get().amount()).isEqualTo(100)
-        );
+        assertThrows(IllegalArgumentException.class, () -> storage.transfer(1, 2, 100));
+        assertThat(storage.getById(2).get().amount()).isEqualTo(100);
     }
 
     @Test
     void whenAccountToIsNotExistsThenDoNotTransfer() {
         var storage = new AccountStorage();
         storage.add(new Account(1, 100));
-        boolean isSuccess = storage.transfer(1, 2, 100);
-        assertAll(
-                () -> assertThat(isSuccess).isFalse(),
-                () -> assertThat(storage.getById(1).get().amount()).isEqualTo(100)
-        );
+        assertThrows(IllegalArgumentException.class, () -> storage.transfer(1, 2, 100));
+        assertThat(storage.getById(1).get().amount()).isEqualTo(100);
     }
 
     @Test
@@ -75,9 +72,8 @@ class AccountStorageTest {
         var storage = new AccountStorage();
         storage.add(new Account(1, 100));
         storage.add(new Account(2, 200));
-        boolean isSuccess = storage.transfer(1, 2, 500);
+        assertThrows(IllegalArgumentException.class, () -> storage.transfer(1, 2, 500));
         assertAll(
-                () -> assertThat(isSuccess).isFalse(),
                 () -> assertThat(storage.getById(1).get().amount()).isEqualTo(100),
                 () -> assertThat(storage.getById(2).get().amount()).isEqualTo(200)
         );
